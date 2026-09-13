@@ -5,9 +5,7 @@ using HeThongVanBangSo.Models;
 
 namespace HeThongVanBangSo.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class NguoiNhanController : ControllerBase
+    public class NguoiNhanController : Controller
     {
         private readonly HeThongVanBangDbContext _context;
 
@@ -16,120 +14,104 @@ namespace HeThongVanBangSo.Controllers
             _context = context;
         }
 
-        /// <summary>
-        /// Danh sách người nhận văn bằng (Hỗ trợ lọc theo từ khóa Họ tên hoặc CCCD)
-        /// </summary>
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<NguoiNhan>>> GetDanhSach([FromQuery] string? tuKhoa)
+        public async Task<IActionResult> Index()
         {
-            var query = _context.NguoiNhans.AsQueryable();
+            var nguoiNhans = await _context.NguoiNhans
+                .OrderByDescending(n => n.MaNguoiNhan)
+                .ToListAsync();
 
-            if (!string.IsNullOrWhiteSpace(tuKhoa))
-            {
-                tuKhoa = tuKhoa.Trim();
-                query = query.Where(n => n.HoTen.Contains(tuKhoa) || n.SoCCCD.Contains(tuKhoa));
-            }
-
-            return await query.OrderBy(n => n.HoTen).ToListAsync();
+            return View(nguoiNhans);
         }
 
-        /// <summary>
-        /// Lấy chi tiết thông tin người nhận theo Mã
-        /// </summary>
-        [HttpGet("{id:long}")]
-        public async Task<ActionResult<NguoiNhan>> GetById(long id)
+        // GET: /NguoiNhan/Create
+        public IActionResult Create()
         {
-            var nguoiNhan = await _context.NguoiNhans.FindAsync(id);
-            if (nguoiNhan == null)
-            {
-                return NotFound(new { message = $"Không tìm thấy người nhận có mã {id}" });
-            }
-
-            return nguoiNhan;
+            return View();
         }
 
-        /// <summary>
-        /// Tra cứu người nhận theo Số CCCD/CMND
-        /// </summary>
-        [HttpGet("cccd/{soCccd}")]
-        public async Task<ActionResult<NguoiNhan>> GetByCccd(string soCccd)
-        {
-            var nguoiNhan = await _context.NguoiNhans
-                .FirstOrDefaultAsync(n => n.SoCCCD == soCccd.Trim());
-
-            if (nguoiNhan == null)
-            {
-                return NotFound(new { message = $"Không tìm thấy người nhận có CCCD {soCccd}" });
-            }
-
-            return nguoiNhan;
-        }
-
-        /// <summary>
-        /// Thêm mới hồ sơ người nhận văn bằng
-        /// </summary>
+        // POST: /NguoiNhan/Create
         [HttpPost]
-        public async Task<ActionResult<NguoiNhan>> TaoMoi([FromBody] NguoiNhan dto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(NguoiNhan nguoiNhan)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return View(nguoiNhan);
             }
 
             // Kiểm tra trùng CCCD
-            bool isCccdExist = await _context.NguoiNhans.AnyAsync(n => n.SoCCCD == dto.SoCCCD.Trim());
+            bool isCccdExist = await _context.NguoiNhans.AnyAsync(n => n.SoCCCD == nguoiNhan.SoCCCD.Trim());
             if (isCccdExist)
             {
-                return Conflict(new { message = $"Số CCCD '{dto.SoCCCD}' đã tồn tại trong cơ sở dữ liệu." });
+                ModelState.AddModelError("SoCCCD", $"Số CCCD '{nguoiNhan.SoCCCD}' đã tồn tại trong hệ thống.");
+                return View(nguoiNhan);
             }
 
-            var nguoiNhan = new NguoiNhan
-            {
-                HoTen = dto.HoTen.Trim(),
-                SoCCCD = dto.SoCCCD.Trim(),
-                Email = dto.Email?.Trim(),
-                NgaySinh = dto.NgaySinh.Date
-            };
+            nguoiNhan.HoTen = nguoiNhan.HoTen.Trim();
+            nguoiNhan.SoCCCD = nguoiNhan.SoCCCD.Trim();
+            nguoiNhan.Email = nguoiNhan.Email?.Trim();
+            nguoiNhan.NgaySinh = nguoiNhan.NgaySinh.Date;
 
             _context.NguoiNhans.Add(nguoiNhan);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = nguoiNhan.MaNguoiNhan }, nguoiNhan);
+            TempData["SuccessMessage"] = $"Đã thêm người nhận '{nguoiNhan.HoTen}' thành công.";
+            return RedirectToAction(nameof(Index));
         }
 
-        /// <summary>
-        /// Lấy toàn bộ danh sách văn bằng đã được cấp của người nhận
-        /// </summary>
-        [HttpGet("{id:long}/van-bang")]
-        public async Task<IActionResult> GetVanBangCuaNguoiNhan(long id)
+        // GET: /NguoiNhan/Edit/5
+        public async Task<IActionResult> Edit(long? id)
         {
+            if (id == null) return NotFound();
+
             var nguoiNhan = await _context.NguoiNhans.FindAsync(id);
-            if (nguoiNhan == null)
+            if (nguoiNhan == null) return NotFound();
+
+            return View(nguoiNhan);
+        }
+
+        // POST: /NguoiNhan/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(long id, NguoiNhan nguoiNhan)
+        {
+            if (id != nguoiNhan.MaNguoiNhan) return NotFound();
+
+            if (!ModelState.IsValid)
             {
-                return NotFound(new { message = $"Không tìm thấy người nhận có mã {id}" });
+                return View(nguoiNhan);
             }
 
-            var danhSachVanBang = await _context.VanBangChungChis
-                .Where(v => v.MaNguoiNhan == id)
-                .Include(v => v.DonViPhatHanh)
-                .Select(v => new
-                {
-                    v.MaVanBang,
-                    v.TenVanBang,
-                    v.SoHieu,
-                    v.NgayCap,
-                    v.TrangThai,
-                    v.MaBamSHA256,
-                    TenDonVi = v.DonViPhatHanh != null ? v.DonViPhatHanh.TenDonVi : string.Empty
-                })
-                .ToListAsync();
-
-            return Ok(new
+            // Kiểm tra trùng CCCD với người khác
+            bool isCccdDuplicate = await _context.NguoiNhans
+                .AnyAsync(n => n.SoCCCD == nguoiNhan.SoCCCD.Trim() && n.MaNguoiNhan != id);
+            if (isCccdDuplicate)
             {
-                NguoiNhan = new { nguoiNhan.MaNguoiNhan, nguoiNhan.HoTen, nguoiNhan.SoCCCD },
-                TongSoVanBang = danhSachVanBang.Count,
-                DanhSachVanBang = danhSachVanBang
-            });
+                ModelState.AddModelError("SoCCCD", $"Số CCCD '{nguoiNhan.SoCCCD}' đã được sử dụng bởi người khác.");
+                return View(nguoiNhan);
+            }
+
+            try
+            {
+                var entity = await _context.NguoiNhans.FindAsync(id);
+                if (entity == null) return NotFound();
+
+                entity.HoTen = nguoiNhan.HoTen.Trim();
+                entity.SoCCCD = nguoiNhan.SoCCCD.Trim();
+                entity.Email = nguoiNhan.Email?.Trim();
+                entity.NgaySinh = nguoiNhan.NgaySinh.Date;
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Đã cập nhật thông tin '{entity.HoTen}' thành công.";
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await _context.NguoiNhans.AnyAsync(n => n.MaNguoiNhan == id))
+                    return NotFound();
+                throw;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

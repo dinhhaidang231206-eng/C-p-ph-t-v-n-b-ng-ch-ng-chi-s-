@@ -6,9 +6,7 @@ using HeThongVanBangSo.Services;
 
 namespace HeThongVanBangSo.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class KhoaKySoController : ControllerBase
+    public class KhoaKySoController : Controller
     {
         private readonly HeThongVanBangDbContext _context;
         private readonly ISignatureService _signatureService;
@@ -19,21 +17,43 @@ namespace HeThongVanBangSo.Controllers
             _signatureService = signatureService;
         }
 
-        /// <summary>
-        /// Tự động sinh cặp khóa RSA 2048-bit cho đơn vị phát hành (Public Key và Private Key)
-        /// </summary>
-        [HttpPost("sinh-khoa")]
-        public async Task<ActionResult<KhoaKySo>> SinhKhoaKySo([FromBody] KhoaKySo dto)
+        public async Task<IActionResult> Index()
         {
-            if (!ModelState.IsValid)
+            var khoas = await _context.KhoaKySos
+                .Include(k => k.DonViPhatHanh)
+                .OrderByDescending(k => k.MaKhoa)
+                .ToListAsync();
+
+            return View(khoas);
+        }
+
+        // GET: /KhoaKySo/Create
+        public async Task<IActionResult> Create()
+        {
+            ViewBag.DanhSachDonVi = await _context.DonViPhatHanhs
+                .Where(d => d.TrangThaiHoatDong)
+                .OrderBy(d => d.TenDonVi)
+                .ToListAsync();
+
+            return View();
+        }
+
+        // POST: /KhoaKySo/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(int maDonVi, DateTime ngayHetHan)
+        {
+            var donVi = await _context.DonViPhatHanhs.FindAsync(maDonVi);
+            if (donVi == null || !donVi.TrangThaiHoatDong)
             {
-                return BadRequest(ModelState);
+                TempData["ErrorMessage"] = "Đơn vị phát hành không tồn tại hoặc đã ngừng hoạt động.";
+                return RedirectToAction(nameof(Create));
             }
 
-            var donVi = await _context.DonViPhatHanhs.FindAsync(dto.MaDonVi);
-            if (donVi == null)
+            if (ngayHetHan <= DateTime.Now)
             {
-                return NotFound(new { message = $"Không tìm thấy đơn vị có mã {dto.MaDonVi}" });
+                TempData["ErrorMessage"] = "Ngày hết hạn phải lớn hơn ngày hiện tại.";
+                return RedirectToAction(nameof(Create));
             }
 
             // Sinh cặp khóa RSA 2048-bit
@@ -41,68 +61,33 @@ namespace HeThongVanBangSo.Controllers
 
             var khoaKySo = new KhoaKySo
             {
-                MaDonVi = dto.MaDonVi,
+                MaDonVi = maDonVi,
                 PublicKeyText = publicKey,
-                PrivateKeyMaHoa = privateKey, // Trong thực tế lưu vào HSM/KMS hoặc mã hóa đối xứng
-                NgayHetHan = dto.NgayHetHan,
+                PrivateKeyMaHoa = privateKey,
+                NgayHetHan = ngayHetHan,
                 TrangThai = true
             };
 
             _context.KhoaKySos.Add(khoaKySo);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetKhoaById), new { id = khoaKySo.MaKhoa }, khoaKySo);
+            TempData["SuccessMessage"] = $"Đã sinh khóa RSA 2048-bit thành công cho đơn vị '{donVi.TenDonVi}' (Mã khóa: {khoaKySo.MaKhoa}).";
+            return RedirectToAction(nameof(Index));
         }
 
-        /// <summary>
-        /// Lấy thông tin khóa ký số theo Mã khóa (chỉ trả về Public Key để bảo mật)
-        /// </summary>
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<KhoaKySo>> GetKhoaById(int id)
-        {
-            var khoa = await _context.KhoaKySos
-                .Include(k => k.DonViPhatHanh)
-                .FirstOrDefaultAsync(k => k.MaKhoa == id);
-
-            if (khoa == null)
-            {
-                return NotFound(new { message = $"Không tìm thấy khóa có mã {id}" });
-            }
-
-            return khoa;
-        }
-
-        /// <summary>
-        /// Lấy danh sách khóa ký số của một đơn vị phát hành
-        /// </summary>
-        [HttpGet("donvi/{maDonVi:int}")]
-        public async Task<ActionResult<IEnumerable<KhoaKySo>>> GetKhoaTheoDonVi(int maDonVi)
-        {
-            var danhSach = await _context.KhoaKySos
-                .Where(k => k.MaDonVi == maDonVi)
-                .Include(k => k.DonViPhatHanh)
-                .OrderByDescending(k => k.MaKhoa)
-                .ToListAsync();
-
-            return Ok(danhSach);
-        }
-
-        /// <summary>
-        /// Vô hiệu hóa một khóa ký số
-        /// </summary>
-        [HttpPut("{id:int}/vo-hieu-hoa")]
-        public async Task<IActionResult> VoHieuHoaKhoa(int id)
+        // POST: /KhoaKySo/VoHieuHoa/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VoHieuHoa(int id)
         {
             var khoa = await _context.KhoaKySos.FindAsync(id);
-            if (khoa == null)
-            {
-                return NotFound(new { message = $"Không tìm thấy khóa ký số {id}" });
-            }
+            if (khoa == null) return NotFound();
 
             khoa.TrangThai = false;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = $"Khóa ký số {id} đã được vô hiệu hóa thành công." });
+            TempData["SuccessMessage"] = $"Khóa ký số #{id} đã được vô hiệu hóa thành công.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }

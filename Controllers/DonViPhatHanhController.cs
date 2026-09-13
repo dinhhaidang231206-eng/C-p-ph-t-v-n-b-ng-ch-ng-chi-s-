@@ -5,125 +5,128 @@ using HeThongVanBangSo.Models;
 
 namespace HeThongVanBangSo.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class DonViPhatHanhController : ControllerBase
+    public class DonViPhatHanhController : Controller
     {
         private readonly HeThongVanBangDbContext _context;
-        private readonly ILogger<DonViPhatHanhController> _logger;
 
-        public DonViPhatHanhController(HeThongVanBangDbContext context, ILogger<DonViPhatHanhController> logger)
+        public DonViPhatHanhController(HeThongVanBangDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
-        /// <summary>
-        /// Lấy danh sách tất cả đơn vị phát hành
-        /// </summary>
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<DonViPhatHanh>>> GetDanhSachDonVi([FromQuery] bool? chiHoatDong = true)
+        public async Task<IActionResult> Index()
         {
-            var query = _context.DonViPhatHanhs.AsQueryable();
-            if (chiHoatDong.HasValue && chiHoatDong.Value)
-            {
-                query = query.Where(d => d.TrangThaiHoatDong);
-            }
+            var donVis = await _context.DonViPhatHanhs
+                .OrderByDescending(d => d.MaDonVi)
+                .ToListAsync();
 
-            return await query.OrderBy(d => d.TenDonVi).ToListAsync();
+            return View(donVis);
         }
 
-        /// <summary>
-        /// Lấy thông tin chi tiết một đơn vị phát hành theo Mã
-        /// </summary>
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<DonViPhatHanh>> GetDonViById(int id)
+        // GET: /DonViPhatHanh/Create
+        public IActionResult Create()
         {
-            var donVi = await _context.DonViPhatHanhs.FindAsync(id);
-            if (donVi == null)
-            {
-                return NotFound(new { message = $"Không tìm thấy đơn vị có mã {id}" });
-            }
-
-            return donVi;
+            return View();
         }
 
-        /// <summary>
-        /// Tạo mới một đơn vị phát hành văn bằng
-        /// </summary>
+        // POST: /DonViPhatHanh/Create
         [HttpPost]
-        public async Task<ActionResult<DonViPhatHanh>> TaoDonVi([FromBody] DonViPhatHanh dto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(DonViPhatHanh donVi)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return View(donVi);
             }
 
             // Kiểm tra trùng MaCode
-            bool isCodeExist = await _context.DonViPhatHanhs.AnyAsync(d => d.MaCode == dto.MaCode);
+            bool isCodeExist = await _context.DonViPhatHanhs.AnyAsync(d => d.MaCode == donVi.MaCode.Trim());
             if (isCodeExist)
             {
-                return Conflict(new { message = $"Mã code '{dto.MaCode}' đã tồn tại trong hệ thống." });
+                ModelState.AddModelError("MaCode", $"Mã code '{donVi.MaCode}' đã tồn tại trong hệ thống.");
+                return View(donVi);
             }
 
-            var donVi = new DonViPhatHanh
-            {
-                TenDonVi = dto.TenDonVi,
-                MaCode = dto.MaCode,
-                Email = dto.Email,
-                TrangThaiHoatDong = dto.TrangThaiHoatDong
-            };
+            donVi.MaCode = donVi.MaCode.Trim();
+            donVi.TenDonVi = donVi.TenDonVi.Trim();
+            donVi.Email = donVi.Email?.Trim();
 
             _context.DonViPhatHanhs.Add(donVi);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetDonViById), new { id = donVi.MaDonVi }, donVi);
+            TempData["SuccessMessage"] = $"Đã thêm đơn vị '{donVi.TenDonVi}' thành công.";
+            return RedirectToAction(nameof(Index));
         }
 
-        /// <summary>
-        /// Cập nhật thông tin đơn vị phát hành
-        /// </summary>
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> CapNhatDonVi(int id, [FromBody] DonViPhatHanh dto)
+        // GET: /DonViPhatHanh/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
+            if (id == null) return NotFound();
+
             var donVi = await _context.DonViPhatHanhs.FindAsync(id);
-            if (donVi == null)
+            if (donVi == null) return NotFound();
+
+            return View(donVi);
+        }
+
+        // POST: /DonViPhatHanh/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, DonViPhatHanh donVi)
+        {
+            if (id != donVi.MaDonVi) return NotFound();
+
+            if (!ModelState.IsValid)
             {
-                return NotFound(new { message = $"Không tìm thấy đơn vị có mã {id}" });
+                return View(donVi);
             }
 
             // Kiểm tra trùng MaCode với đơn vị khác
-            bool isCodeDuplicate = await _context.DonViPhatHanhs.AnyAsync(d => d.MaCode == dto.MaCode && d.MaDonVi != id);
+            bool isCodeDuplicate = await _context.DonViPhatHanhs
+                .AnyAsync(d => d.MaCode == donVi.MaCode.Trim() && d.MaDonVi != id);
             if (isCodeDuplicate)
             {
-                return Conflict(new { message = $"Mã code '{dto.MaCode}' đã được sử dụng bởi đơn vị khác." });
+                ModelState.AddModelError("MaCode", $"Mã code '{donVi.MaCode}' đã được sử dụng bởi đơn vị khác.");
+                return View(donVi);
             }
 
-            donVi.TenDonVi = dto.TenDonVi;
-            donVi.MaCode = dto.MaCode;
-            donVi.Email = dto.Email;
-            donVi.TrangThaiHoatDong = dto.TrangThaiHoatDong;
+            try
+            {
+                var entity = await _context.DonViPhatHanhs.FindAsync(id);
+                if (entity == null) return NotFound();
 
-            await _context.SaveChangesAsync();
-            return Ok(donVi);
+                entity.TenDonVi = donVi.TenDonVi.Trim();
+                entity.MaCode = donVi.MaCode.Trim();
+                entity.Email = donVi.Email?.Trim();
+                entity.TrangThaiHoatDong = donVi.TrangThaiHoatDong;
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Đã cập nhật đơn vị '{entity.TenDonVi}' thành công.";
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await _context.DonViPhatHanhs.AnyAsync(d => d.MaDonVi == id))
+                    return NotFound();
+                throw;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
-        /// <summary>
-        /// Khóa / Tạm dừng hoạt động đơn vị
-        /// </summary>
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> KhoaDonVi(int id)
+        // POST: /DonViPhatHanh/ToggleStatus/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleStatus(int id)
         {
             var donVi = await _context.DonViPhatHanhs.FindAsync(id);
-            if (donVi == null)
-            {
-                return NotFound(new { message = $"Không tìm thấy đơn vị có mã {id}" });
-            }
+            if (donVi == null) return NotFound();
 
-            donVi.TrangThaiHoatDong = false;
+            donVi.TrangThaiHoatDong = !donVi.TrangThaiHoatDong;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = $"Đơn vị '{donVi.TenDonVi}' đã được chuyển sang trạng thái ngưng hoạt động." });
+            string trangThai = donVi.TrangThaiHoatDong ? "kích hoạt" : "ngừng hoạt động";
+            TempData["SuccessMessage"] = $"Đơn vị '{donVi.TenDonVi}' đã được chuyển sang trạng thái {trangThai}.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }

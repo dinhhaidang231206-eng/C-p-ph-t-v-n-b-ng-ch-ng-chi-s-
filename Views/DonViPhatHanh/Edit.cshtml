@@ -1,0 +1,48 @@
+@model HeThongVanBangSo.Models.DonViPhatHanh
+
+@{
+    ViewData["Title"] = "Sửa Đơn vị Phát Hành";
+}
+
+<div class="form-section mt-3">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">Chỉnh sửa Đơn vị Phát Hành</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="MaDonVi" />
+
+                <div class="mb-3">
+                    <label asp-for="TenDonVi" class="form-label fw-semibold">Tên Đơn vị <span class="text-danger">*</span></label>
+                    <input asp-for="TenDonVi" class="form-control" />
+                    <span asp-validation-for="TenDonVi" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MaCode" class="form-label fw-semibold">Mã Code Đơn vị <span class="text-danger">*</span></label>
+                    <input asp-for="MaCode" class="form-control" />
+                    <span asp-validation-for="MaCode" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold">Email liên hệ</label>
+                    <input asp-for="Email" class="form-control" type="email" />
+                    <span asp-validation-for="Email" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="TrangThaiHoatDong" class="form-check-input" type="checkbox" />
+                    <label asp-for="TrangThaiHoatDong" class="form-check-label">Đang hoạt động</label>
+                </div>
+
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <a href="/DonViPhatHanh" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+                    <button type="submit" class="btn btn-warning">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

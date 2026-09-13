@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Cấp Phát Văn Bằng";
+    var danhSachDonVi = ViewBag.DanhSachDonVi as List<HeThongVanBangSo.Models.DonViPhatHanh>;
+    var danhSachNguoiNhan = ViewBag.DanhSachNguoiNhan as List<HeThongVanBangSo.Models.NguoiNhan>;
+}
+
+<div class="form-section mt-3">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Cấp Phát Văn Bằng / Chứng Chỉ Mới</h5>
+        </div>
+        <div class="card-body">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="alert alert-info">
+                <strong>Quy trình:</strong> Tải lên tệp tin PDF văn bằng → Hệ thống tự động tính mã băm SHA-256 → Ký số bằng khóa RSA của đơn vị → Lưu trữ an toàn.
+            </div>
+
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Đơn vị Phát Hành <span class="text-danger">*</span></label>
+                        <select name="maDonVi" class="form-select" required>
+                            <option value="">-- Chọn đơn vị --</option>
+                            @if (danhSachDonVi != null)
+                            {
+                                foreach (var dv in danhSachDonVi)
+                                {
+                                    <option value="@dv.MaDonVi">@dv.TenDonVi (@dv.MaCode)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Người Nhận <span class="text-danger">*</span></label>
+                        <select name="maNguoiNhan" class="form-select" required>
+                            <option value="">-- Chọn người nhận --</option>
+                            @if (danhSachNguoiNhan != null)
+                            {
+                                foreach (var nn in danhSachNguoiNhan)
+                                {
+                                    <option value="@nn.MaNguoiNhan">@nn.HoTen (CCCD: @nn.SoCCCD)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Tên Văn Bằng / Chứng Chỉ <span class="text-danger">*</span></label>
+                    <input type="text" name="tenVanBang" class="form-control" required placeholder="VD: Bằng Kỹ sư Công nghệ Thông tin" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Số Hiệu Văn Bằng <span class="text-danger">*</span></label>
+                        <input type="text" name="soHieu" class="form-control" required placeholder="VD: BK-2026-IT003" />
+                        <small class="text-muted">Mã duy nhất, không được trùng trong hệ thống.</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Ngày Cấp <span class="text-danger">*</span></label>
+                        <input type="date" name="ngayCap" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Tệp tin Văn Bằng (PDF) <span class="text-danger">*</span></label>
+                    <input type="file" name="fileVanBang" class="form-control" accept=".pdf" required />
+                    <small class="text-muted">Chỉ chấp nhận file PDF, kích thước tối đa 10 MB.</small>
+                </div>
+
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <a href="/VanBangChungChi" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+                    <button type="submit" class="btn btn-success">Cấp Phát & Ký Số</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

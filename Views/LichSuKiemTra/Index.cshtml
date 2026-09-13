@@ -1,0 +1,59 @@
+@model IEnumerable<HeThongVanBangSo.Models.LichSuKiemTra>
+
+@{
+    ViewData["Title"] = "Lịch Sử Kiểm Tra";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="text-primary">Lịch sử Tra cứu / Kiểm tra Văn Bằng</h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Mã</th>
+                        <th>Tên File Đã Tải Lên</th>
+                        <th>Thời Gian Kiểm Tra</th>
+                        <th>IP Tra Cứu</th>
+                        <th>Kết Quả</th>
+                        <th>Ghi Chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@item.MaKiemTra</strong></td>
+                                <td>@item.TenFileTaiLen</td>
+                                <td>@item.ThoiGianKiemTra.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>@item.IPNguoiKiemTra</td>
+                                <td>
+                                    @if (item.KetQuaHopLe)
+                                    {
+                                        <span class="badge bg-success">Hợp lệ</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Không hợp lệ</span>
+                                    }
+                                </td>
+                                <td>@item.GhiChu</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Chưa có dữ liệu lịch sử kiểm tra.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

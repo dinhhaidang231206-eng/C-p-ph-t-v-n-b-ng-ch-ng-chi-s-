@@ -1,0 +1,56 @@
+@model HeThongVanBangSo.Models.NguoiNhan
+
+@{
+    ViewData["Title"] = "Thêm Người Nhận";
+}
+
+<div class="form-section mt-3">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Thêm Người Nhận Văn Bằng</h5>
+        </div>
+        <div class="card-body">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label asp-for="HoTen" class="form-label fw-semibold">Họ và Tên <span class="text-danger">*</span></label>
+                    <input asp-for="HoTen" class="form-control" placeholder="VD: Nguyễn Văn An" />
+                    <span asp-validation-for="HoTen" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SoCCCD" class="form-label fw-semibold">Số CCCD/CMND <span class="text-danger">*</span></label>
+                    <input asp-for="SoCCCD" class="form-control" placeholder="VD: 001201012345" />
+                    <span asp-validation-for="SoCCCD" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="NgaySinh" class="form-label fw-semibold">Ngày sinh <span class="text-danger">*</span></label>
+                    <input asp-for="NgaySinh" class="form-control" type="date" />
+                    <span asp-validation-for="NgaySinh" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold">Email</label>
+                    <input asp-for="Email" class="form-control" type="email" placeholder="VD: email@example.com" />
+                    <span asp-validation-for="Email" class="field-validation-error"></span>
+                </div>
+
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <a href="/NguoiNhan" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+                    <button type="submit" class="btn btn-primary">Thêm Người Nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

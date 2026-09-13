@@ -1,0 +1,163 @@
+@model HeThongVanBangSo.Models.VanBangChungChi
+
+@{
+    ViewData["Title"] = "Chi Tiết Văn Bằng";
+}
+
+<div class="mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">Chi Tiết Văn Bằng / Chứng Chỉ</h2>
+        <a href="/VanBangChungChi" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Thông tin Văn Bằng</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th style="width: 200px;" class="text-muted">Mã Văn Bằng:</th>
+                            <td><strong>@Model.MaVanBang</strong></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Số Hiệu:</th>
+                            <td><strong class="text-primary">@Model.SoHieu</strong></td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Tên Văn Bằng:</th>
+                            <td>@Model.TenVanBang</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Ngày Cấp:</th>
+                            <td>@Model.NgayCap.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Ngày Tạo Trên Hệ Thống:</th>
+                            <td>@Model.NgayTao.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Trạng Thái:</th>
+                            <td>
+                                @if (Model.TrangThai == "HOP_LE")
+                                {
+                                    <span class="badge bg-success fs-6">Hợp lệ</span>
+                                }
+                                else if (Model.TrangThai == "THU_HOI")
+                                {
+                                    <span class="badge bg-danger fs-6">Đã thu hồi</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary fs-6">@Model.TrangThai</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">File Đã Ký:</th>
+                            <td>
+                                @if (!string.IsNullOrEmpty(Model.DuongDanFileDaKy))
+                                {
+                                    <a href="@Model.DuongDanFileDaKy" target="_blank" class="btn btn-sm btn-outline-info">Tải xuống / Xem File</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có</span>
+                                }
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Thông tin bảo mật -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Thông tin Bảo Mật & Chữ Ký Số</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Mã Băm SHA-256:</label>
+                        <div class="bg-light p-2 rounded font-monospace" style="word-break: break-all; font-size: 0.85rem;">
+                            @Model.MaBamSHA256
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Chữ Ký Số (RSA-SHA256, Base64):</label>
+                        <div class="bg-light p-2 rounded font-monospace" style="word-break: break-all; font-size: 0.75rem; max-height: 120px; overflow-y: auto;">
+                            @Model.ChuKySo
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold text-muted">Mã Khóa Ký:</label>
+                        <span>@Model.MaKhoa</span>
+                        @if (Model.KhoaKySo != null)
+                        {
+                            if (Model.KhoaKySo.TrangThai && Model.KhoaKySo.NgayHetHan > DateTime.UtcNow)
+                            {
+                                <span class="badge bg-success ms-2">Khóa còn hiệu lực</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger ms-2">Khóa hết hiệu lực / đã vô hiệu</span>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Người nhận -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">Người Nhận</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.NguoiNhan != null)
+                    {
+                        <p class="mb-1"><strong>@Model.NguoiNhan.HoTen</strong></p>
+                        <p class="mb-1 text-muted">CCCD: @Model.NguoiNhan.SoCCCD</p>
+                        <p class="mb-0 text-muted">Ngày sinh: @Model.NguoiNhan.NgaySinh.ToString("dd/MM/yyyy")</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Đơn vị phát hành -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">Đơn Vị Phát Hành</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.DonViPhatHanh != null)
+                    {
+                        <p class="mb-1"><strong>@Model.DonViPhatHanh.TenDonVi</strong></p>
+                        <p class="mb-1 text-muted">Mã: @Model.DonViPhatHanh.MaCode</p>
+                        <p class="mb-0 text-muted">Email: @Model.DonViPhatHanh.Email</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Thu hồi -->
+            @if (Model.TrangThai == "HOP_LE")
+            {
+                <div class="card shadow-sm border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0">Thu Hồi Văn Bằng</h6>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="ThuHoi" asp-route-id="@Model.MaVanBang" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-2">
+                                <input type="text" name="lyDo" class="form-control form-control-sm" placeholder="Lý do thu hồi (tùy chọn)" />
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-sm w-100" onclick="return confirm('Bạn có chắc chắn muốn thu hồi văn bằng này? Hành động này không thể hoàn tác.')">Thu Hồi Văn Bằng</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

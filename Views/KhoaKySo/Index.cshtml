@@ -1,0 +1,95 @@
+@model IEnumerable<HeThongVanBangSo.Models.KhoaKySo>
+
+@{
+    ViewData["Title"] = "Khóa Ký Số";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="text-primary">Quản lý Khóa Ký Số</h2>
+    <a href="/KhoaKySo/Create" class="btn btn-success">+ Sinh Khóa RSA Mới</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Mã Khóa</th>
+                        <th>Đơn Vị Sở Hữu</th>
+                        <th>Ngày Hết Hạn</th>
+                        <th>Khóa Công Khai (Public Key)</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@item.MaKhoa</strong></td>
+                                <td>
+                                    @if (item.DonViPhatHanh != null)
+                                    {
+                                        <span>@item.DonViPhatHanh.TenDonVi</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Không xác định (@item.MaDonVi)</span>
+                                    }
+                                </td>
+                                <td>
+                                    @item.NgayHetHan.ToString("dd/MM/yyyy HH:mm")
+                                    @if (item.NgayHetHan < DateTime.UtcNow)
+                                    {
+                                        <br /><span class="badge bg-danger">Đã hết hạn</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@item.PublicKeyText">
+                                        @item.PublicKeyText
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (item.TrangThai && item.NgayHetHan > DateTime.UtcNow)
+                                    {
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                    }
+                                    else if (!item.TrangThai)
+                                    {
+                                        <span class="badge bg-secondary">Vô hiệu hóa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Hết hiệu lực</span>
+                                    }
+                                </td>
+                                <td class="btn-actions">
+                                    @if (item.TrangThai)
+                                    {
+                                        <form asp-action="VoHieuHoa" asp-route-id="@item.MaKhoa" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn vô hiệu hóa khóa ký số này?')">Vô hiệu hóa</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Đã vô hiệu</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Không có dữ liệu khóa ký số nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

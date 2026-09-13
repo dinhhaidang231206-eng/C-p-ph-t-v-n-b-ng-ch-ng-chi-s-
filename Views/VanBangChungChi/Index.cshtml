@@ -1,0 +1,75 @@
+@model IEnumerable<HeThongVanBangSo.Models.VanBangChungChi>
+
+@{
+    ViewData["Title"] = "Quản lý Văn Bằng";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="text-primary">Danh sách Văn Bằng / Chứng Chỉ</h2>
+    <a href="/VanBangChungChi/Create" class="btn btn-success">+ Cấp phát Văn Bằng mới</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Số hiệu</th>
+                        <th>Tên Văn bằng</th>
+                        <th>Người nhận</th>
+                        <th>Đơn vị cấp</th>
+                        <th>Ngày cấp</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@item.SoHieu</strong></td>
+                                <td>@item.TenVanBang</td>
+                                <td>
+                                    @item.NguoiNhan?.HoTen <br />
+                                    <small class="text-muted">CCCD: @item.NguoiNhan?.SoCCCD</small>
+                                </td>
+                                <td>@item.DonViPhatHanh?.TenDonVi</td>
+                                <td>@item.NgayCap.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (item.TrangThai == "HOP_LE")
+                                    {
+                                        <span class="badge bg-success">Hợp lệ</span>
+                                    }
+                                    else if (item.TrangThai == "THU_HOI")
+                                    {
+                                        <span class="badge bg-danger">Đã thu hồi</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@item.TrangThai</span>
+                                    }
+                                </td>
+                                <td class="btn-actions">
+                                    <a href="/VanBangChungChi/Details/@item.MaVanBang" class="btn btn-sm btn-outline-info">Chi tiết</a>
+                                    @if (!string.IsNullOrEmpty(item.DuongDanFileDaKy))
+                                    {
+                                        <a href="@item.DuongDanFileDaKy" target="_blank" class="btn btn-sm btn-outline-secondary">File</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Không có dữ liệu văn bằng nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

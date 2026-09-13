@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Tạo Khóa Ký Số";
+    var danhSachDonVi = ViewBag.DanhSachDonVi as List<HeThongVanBangSo.Models.DonViPhatHanh>;
+}
+
+<div class="form-section mt-3">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Sinh Khóa Ký Số RSA 2048-bit</h5>
+        </div>
+        <div class="card-body">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="alert alert-info">
+                <strong>Lưu ý:</strong> Hệ thống sẽ tự động sinh cặp khóa RSA 2048-bit (Public Key & Private Key) cho đơn vị phát hành được chọn. Khóa này dùng để ký số các văn bằng chứng chỉ.
+            </div>
+
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Đơn vị Phát Hành <span class="text-danger">*</span></label>
+                    <select name="maDonVi" class="form-select" required>
+                        <option value="">-- Chọn đơn vị --</option>
+                        @if (danhSachDonVi != null)
+                        {
+                            foreach (var dv in danhSachDonVi)
+                            {
+                                <option value="@dv.MaDonVi">@dv.TenDonVi (@dv.MaCode)</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Ngày Hết Hạn <span class="text-danger">*</span></label>
+                    <input type="datetime-local" name="ngayHetHan" class="form-control" required />
+                    <small class="text-muted">Thời điểm khóa sẽ hết hiệu lực.</small>
+                </div>
+
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <a href="/KhoaKySo" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+                    <button type="submit" class="btn btn-primary">Sinh Khóa RSA</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

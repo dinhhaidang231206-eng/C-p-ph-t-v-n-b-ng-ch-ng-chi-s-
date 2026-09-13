@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<div class="hero-section text-center mt-3 mb-5">
+    <h1 class="display-4">Hệ Thống Văn Bằng Số</h1>
+    <p class="lead mt-3">Hệ thống cấp phát và tra cứu văn bằng, chứng chỉ có áp dụng chữ ký số RSA và băm SHA-256 đảm bảo tính toàn vẹn dữ liệu.</p>
+    <a href="/Home/TraCuu" class="btn btn-light btn-lg mt-3 fw-semibold">Tra Cứu / Kiểm Tra Văn Bằng →</a>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100 card-hover">
+            <div class="card-body text-center">
+                <h5 class="card-title text-success mb-3">Tra Cứu Văn Bằng</h5>
+                <p class="card-text">Kiểm tra tính hợp lệ và thông tin chi tiết của văn bằng chứng chỉ bằng cách tải lên tệp tin hoặc nhập mã băm SHA-256.</p>
+                <a href="/Home/TraCuu" class="btn btn-outline-success">Tra cứu ngay</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100 card-hover">
+            <div class="card-body text-center">
+                <h5 class="card-title text-primary mb-3">Cấp Phát Văn Bằng</h5>
+                <p class="card-text">Dành cho đơn vị phát hành để cấp mới văn bằng chứng chỉ với ký số RSA điện tử và lưu trữ an toàn.</p>
+                <a href="/VanBangChungChi/Create" class="btn btn-outline-primary">Cấp phát mới</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100 card-hover">
+            <div class="card-body text-center">
+                <h5 class="card-title text-info mb-3">Quản Lý Hệ Thống</h5>
+                <p class="card-text">Quản lý đơn vị phát hành, người nhận, khóa ký số, và theo dõi lịch sử tra cứu văn bằng.</p>
+                <a href="/VanBangChungChi" class="btn btn-outline-info">Xem danh sách</a>
+            </div>
+        </div>
+    </div>
+</div>

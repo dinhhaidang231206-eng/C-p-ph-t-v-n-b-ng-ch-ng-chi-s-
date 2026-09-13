@@ -1,0 +1,176 @@
+@{
+    ViewData["Title"] = "Tra Cứu & Xác Thực Văn Bằng";
+    var daTraCuu = ViewBag.DaTraCuu as bool? ?? false;
+    var ketQuaHopLe = ViewBag.KetQuaHopLe as bool? ?? false;
+    var chuKySoHopLe = ViewBag.ChuKySoHopLe as bool? ?? false;
+    var ghiChu = ViewBag.GhiChu as string ?? "";
+    var maBamFile = ViewBag.MaBamFile as string ?? "";
+    var tenFile = ViewBag.TenFile as string ?? "";
+    var vanBang = ViewBag.VanBang as HeThongVanBangSo.Models.VanBangChungChi;
+}
+
+<div class="mt-3">
+    <h2 class="text-primary mb-4">Tra Cứu & Xác Thực Văn Bằng Chứng Chỉ</h2>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Cách 1: Upload file -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Cách 1: Tải lên tệp tin để kiểm tra</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Hệ thống sẽ tính mã băm SHA-256 của tệp tin và đối chiếu với cơ sở dữ liệu, đồng thời xác thực chữ ký số RSA.</p>
+                    <form asp-action="TraCuuByFile" asp-controller="Home" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Chọn tệp tin văn bằng:</label>
+                            <input type="file" name="fileVanBang" class="form-control" required />
+                            <small class="text-muted">Hỗ trợ tệp PDF, tối đa 10 MB.</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Kiểm Tra Tính Hợp Lệ</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cách 2: Nhập mã băm -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Cách 2: Nhập mã băm SHA-256</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Nếu bạn đã có sẵn chuỗi mã băm SHA-256 (64 ký tự hex), nhập trực tiếp để tra cứu nhanh.</p>
+                    <form asp-action="TraCuuByHash" asp-controller="Home" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Mã băm SHA-256:</label>
+                            <input type="text" name="maBamSHA256" class="form-control font-monospace" maxlength="64" pattern="[0-9a-fA-F]{64}" placeholder="VD: e3b0c44298fc1c149afbf4c8996fb924..." required />
+                            <small class="text-muted">Đúng 64 ký tự hex (0-9, a-f).</small>
+                        </div>
+                        <button type="submit" class="btn btn-dark w-100">Tra Cứu Theo Mã Băm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kết quả tra cứu -->
+    @if (daTraCuu)
+    {
+        <div class="mt-4">
+            <h4 class="mb-3">Kết Quả Tra Cứu</h4>
+
+            <div class="card shadow-sm result-card @(ketQuaHopLe ? "success" : "danger") mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        @if (ketQuaHopLe)
+                        {
+                            <span class="badge bg-success fs-5 me-3 p-2">✓ HỢP LỆ</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger fs-5 me-3 p-2">✗ KHÔNG HỢP LỆ</span>
+                        }
+                        <span class="fs-6">@ghiChu</span>
+                    </div>
+
+                    <table class="table table-borderless table-sm mb-0">
+                        <tr>
+                            <th style="width: 180px;" class="text-muted">Tên file đã kiểm tra:</th>
+                            <td>@tenFile</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">Mã băm SHA-256:</th>
+                            <td><code class="font-monospace">@maBamFile</code></td>
+                        </tr>
+                        @if (chuKySoHopLe)
+                        {
+                            <tr>
+                                <th class="text-muted">Chữ ký số:</th>
+                                <td><span class="badge bg-success">Hợp lệ</span></td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+
+            @if (vanBang != null)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Thông Tin Văn Bằng Tìm Thấy</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    <tr>
+                                        <th class="text-muted" style="width: 140px;">Số Hiệu:</th>
+                                        <td><strong class="text-primary">@vanBang.SoHieu</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Tên Văn Bằng:</th>
+                                        <td>@vanBang.TenVanBang</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Ngày Cấp:</th>
+                                        <td>@vanBang.NgayCap.ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-muted">Trạng Thái:</th>
+                                        <td>
+                                            @if (vanBang.TrangThai == "HOP_LE")
+                                            {
+                                                <span class="badge bg-success">Hợp lệ</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Đã thu hồi</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm">
+                                    @if (vanBang.NguoiNhan != null)
+                                    {
+                                        <tr>
+                                            <th class="text-muted" style="width: 140px;">Người Nhận:</th>
+                                            <td><strong>@vanBang.NguoiNhan.HoTen</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="text-muted">CCCD:</th>
+                                            <td>@vanBang.NguoiNhan.SoCCCD</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="text-muted">Ngày Sinh:</th>
+                                            <td>@vanBang.NguoiNhan.NgaySinh.ToString("dd/MM/yyyy")</td>
+                                        </tr>
+                                    }
+                                    @if (vanBang.DonViPhatHanh != null)
+                                    {
+                                        <tr>
+                                            <th class="text-muted">Đơn Vị Cấp:</th>
+                                            <td>@vanBang.DonViPhatHanh.TenDonVi</td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

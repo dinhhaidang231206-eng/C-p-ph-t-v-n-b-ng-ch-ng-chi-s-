@@ -6,6 +6,12 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Giới hạn kích thước request body: 15 MB (bao gồm cả metadata của multipart form)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 15 * 1024 * 1024;
+});
+
 // 1. Cấu hình DbContext kết nối SQL Server
 builder.Services.AddDbContext<HeThongVanBangDbContext>(options =>
     options.UseSqlServer(
@@ -17,8 +23,8 @@ builder.Services.AddDbContext<HeThongVanBangDbContext>(options =>
 // 2. Đăng ký Dependency Injection cho Service Ký số & Băm SHA-256
 builder.Services.AddSingleton<ISignatureService, SignatureService>();
 
-// 3. Cấu hình Controllers và xử lý JSON vòng lặp
-builder.Services.AddControllers()
+// 3. Cấu hình Controllers (API & MVC) và xử lý JSON vòng lặp
+builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -57,15 +63,24 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hệ Thống Văn Bằng Số v1");
-        c.RoutePrefix = string.Empty; // Mở Swagger trực tiếp tại trang chủ http://localhost:5000
+        c.RoutePrefix = "swagger"; // Đổi Swagger từ trang chủ sang /swagger để nhường trang chủ cho MVC Views
     });
 }
 
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // Cho phép truy cập file chứng chỉ tải lên nếu cần
+app.UseStaticFiles(); // Cho phép truy cập file tĩnh (wwwroot, css, js)
+
+app.UseRouting();
 
 app.UseAuthorization();
+
+// Map API Controllers
 app.MapControllers();
+
+// Map MVC Default Route
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

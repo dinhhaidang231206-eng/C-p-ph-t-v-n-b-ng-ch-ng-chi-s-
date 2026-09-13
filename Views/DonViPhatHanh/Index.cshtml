@@ -1,0 +1,73 @@
+@model IEnumerable<HeThongVanBangSo.Models.DonViPhatHanh>
+
+@{
+    ViewData["Title"] = "Đơn vị Phát Hành";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <h2 class="text-primary">Danh sách Đơn vị Phát Hành</h2>
+    <a href="/DonViPhatHanh/Create" class="btn btn-success">+ Thêm Đơn vị</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Mã Đơn vị</th>
+                        <th>Tên Đơn vị</th>
+                        <th>Mã Code</th>
+                        <th>Email</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@item.MaDonVi</strong></td>
+                                <td>@item.TenDonVi</td>
+                                <td>@item.MaCode</td>
+                                <td>@item.Email</td>
+                                <td>
+                                    @if (item.TrangThaiHoatDong)
+                                    {
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Ngừng hoạt động</span>
+                                    }
+                                </td>
+                                <td class="btn-actions">
+                                    <a href="/DonViPhatHanh/Edit/@item.MaDonVi" class="btn btn-sm btn-outline-warning">Sửa</a>
+                                    <form asp-action="ToggleStatus" asp-route-id="@item.MaDonVi" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        @if (item.TrangThaiHoatDong)
+                                        {
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn ngừng hoạt động đơn vị này?')">Khóa</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Bạn có chắc muốn kích hoạt lại đơn vị này?')">Kích hoạt</button>
+                                        }
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Không có dữ liệu đơn vị phát hành nào.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

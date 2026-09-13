@@ -1,0 +1,56 @@
+@model HeThongVanBangSo.Models.DonViPhatHanh
+
+@{
+    ViewData["Title"] = "Thêm Đơn vị Phát Hành";
+}
+
+<div class="form-section mt-3">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Thêm Đơn vị Phát Hành Mới</h5>
+        </div>
+        <div class="card-body">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label asp-for="TenDonVi" class="form-label fw-semibold">Tên Đơn vị <span class="text-danger">*</span></label>
+                    <input asp-for="TenDonVi" class="form-control" placeholder="VD: Đại học Bách Khoa Hà Nội" />
+                    <span asp-validation-for="TenDonVi" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MaCode" class="form-label fw-semibold">Mã Code Đơn vị <span class="text-danger">*</span></label>
+                    <input asp-for="MaCode" class="form-control" placeholder="VD: DHBKHN" />
+                    <span asp-validation-for="MaCode" class="field-validation-error"></span>
+                    <small class="text-muted">Mã viết tắt duy nhất, không có dấu tiếng Việt.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold">Email liên hệ</label>
+                    <input asp-for="Email" class="form-control" type="email" placeholder="VD: vanbang@hust.edu.vn" />
+                    <span asp-validation-for="Email" class="field-validation-error"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input asp-for="TrangThaiHoatDong" class="form-check-input" type="checkbox" checked />
+                    <label asp-for="TrangThaiHoatDong" class="form-check-label">Đang hoạt động</label>
+                </div>
+
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <a href="/DonViPhatHanh" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+                    <button type="submit" class="btn btn-primary">Thêm Đơn vị</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
